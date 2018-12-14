@@ -8,7 +8,8 @@
 </template>
 
 <script>
-    import moment from 'moment'
+
+    import XDate from 'xdate'
 
     export default {
         props: ['event', 'date', 'firstDay'],
@@ -22,11 +23,11 @@
 					cssClasses = [cssClasses];
 				}
 
-                if (this.start.isSame(this.date, 'day')) {
+                if (this.start.diffDays(this.date)<1) {
                     cssClasses.push('is-start');
                 }
 
-                if (this.end.isSame(this.date, 'day')) {
+                if (this.end.diffDays(this.date)<1) {
                     cssClasses.push('is-end');
                 }
 
@@ -34,16 +35,17 @@
                     cssClasses.push('is-opacity');
                 }
 
+
                 return cssClasses.join(' ');
             },
             showTitle() {
-                return (this.date.day() === this.firstDay || this.start.isSame(this.date, 'day'));
+                return (this.date.getDate() === this.firstDay || this.start.diffDays(this.date)<1);
             },
             start () {
-                return moment(this.event.start);
+                return new XDate(this.event.start);
             },
             end () {
-                return moment(this.event.end);
+                return new XDate(this.event.end);
             }
         }
     }

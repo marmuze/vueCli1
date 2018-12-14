@@ -19,13 +19,13 @@
     <!-- body display date day and events -->
     <div class="full-calendar-body">
       <div class="weeks">
-        <strong class="week" v-for="dayIndex in 7" :key="dayIndex">{{ (dayIndex - 1) | localeWeekDay(firstDay, locale) }}</strong>
+        <strong class="week" v-for="dayIndex in nbJour" :key="dayIndex">{{ (dayIndex - 1) |localeWeekDay}}</strong>
       </div>
       <div class="dates" ref="dates">
         <div class="dates-bg">
-          <div class="week-row" v-for="week in currentDates" :key="week">
+          <div class="week-row" v-for="week in currentDates" >
             <div class="day-cell" v-for="day in week"
-                 :key="day"
+
                  :class="{'today' : day.isToday,
               'not-cur-month' : !day.isCurMonth}">
               <p class="day-number">{{ day.monthDay }}</p>
@@ -35,13 +35,13 @@
 
         <!-- absolute so we can make dynamic td -->
         <div class="dates-events">
-          <div class="events-week" v-for="week in currentDates" :key="week">
-            <div class="events-day" v-for="day in week" :key="day" track-by="$index"
+          <div class="events-week" v-for="week in currentDates" >
+            <div class="events-day" v-for="day in week"  track-by="$index"
                  :class="{'today' : day.isToday,
               'not-cur-month' : !day.isCurMonth}" @click.stop="dayClick(day.date, $event)">
               <p class="day-number">{{day.monthDay}}</p>
               <div class="event-box">
-                <event-card :event="event" :date="day.date" :firstDay="firstDay" :key="event" v-for="event in day.events" v-show="event.cellIndex <= eventLimit" @click="eventClick">
+                <event-card :event="event" :date="day.date" :firstDay="firstDay"  v-for="event in day.events" v-show="event.cellIndex <= eventLimit" @click="eventClick">
                   <template scope="p">
                     <slot name="fc-event-card" :event="p.event"></slot>
                   </template>
@@ -84,7 +84,7 @@
 <script type="text/babel">
   // import langSets from './dataMap/langSets'
   import dateFunc from './components/dateFunc'
-  import moment from 'moment';
+  import XDate from 'xdate';
   import EventCard from './components/eventCard.vue';
   import Header from './components/header'
 
@@ -105,7 +105,9 @@
           return res >= 0 && res <= 6
         },
         default : 0
-      }
+      },
+        nbSemaine:{type:Number ,default:6} ,
+        nbJour:{type:Number ,default:7}
     },
     components : {
       'event-card': EventCard,
@@ -116,9 +118,9 @@
     },
     data () {
       return {
-        currentMonth : moment().startOf('month'),
+        currentMonth : new XDate().setDate(1),
         isLismit : true,
-        eventLimit : 3,
+        eventLimit : 2,
         showMore : false,
         morePos : {
           top: 0,
@@ -143,27 +145,28 @@
       },
       moreTitle (date) {
         if (!date) return '';
-        return moment(date).format('ll');
+        return new XDate(date).toString("dd");
       },
       getCalendar () {
         // calculate 2d-array of each month
-        let monthViewStartDate = dateFunc.getMonthViewStartDate(this.currentMonth, this.firstDay);
+        let viewStartDate = dateFunc.getMonthViewStartDate(this.currentMonth, this.firstDay);
+        //let viewStartDate=moment()
         let calendar = [];
 
-        for(let perWeek = 0 ; perWeek < 6 ; perWeek++) {
+        for(let perWeek = 0 ; perWeek < this.nbSemaine ; perWeek++) {
           let week = [];
 
-          for(let perDay = 0 ; perDay < 7 ; perDay++) {
+          for(let perDay = 0 ; perDay < this.nbJour ; perDay++) {
             week.push({
-              monthDay : monthViewStartDate.date(),
-              isToday : monthViewStartDate.isSame(moment(), 'day'),
-              isCurMonth : monthViewStartDate.isSame(this.currentMonth, 'month'),
+              monthDay : viewStartDate.getDate(),
+              isToday : viewStartDate.diffDays(new XDate())===0,
+              isCurMonth : viewStartDate.diffMonths(this.currentMonth)<=1,
               weekDay : perDay,
-              date : moment(monthViewStartDate),
-              events : this.slotEvents(monthViewStartDate)
+              date : new XDate(viewStartDate),
+              events : this.slotEvents(viewStartDate)
             });
 
-            monthViewStartDate.add(1, 'day');
+            viewStartDate.addDays(1);
           }
 
           calendar.push(week);
@@ -176,10 +179,10 @@
         // find all events start from this date
 
         let thisDayEvents = this.events.filter(day => {
-          let st = moment(day.start);
-          let ed = moment(day.end ? day.end : st);
+          let st = new XDate(day.start);
+          let ed = new XDate(day.end ? day.end : st);
 
-          return date.isBetween(st, ed, null, '[]');
+          return date.diffDays(st)<=0 && date.diffDays(ed)>=0;
         });
 
         // sort by duration
@@ -197,8 +200,8 @@
           thisDayEvents.splice(i,0,{
             title : 'holder',
             cellIndex : i+1,
-            start : date.format(),
-            end : date.format(),
+            start : date,
+            end : date,
             isShow : false
           })
         }
@@ -235,10 +238,10 @@
       }
     },
     filters: {
-      localeWeekDay (weekday, firstDay, locale) {
-        firstDay = parseInt(firstDay);
-        const localMoment = moment().locale(locale);
-        return localMoment.localeData().weekdaysShort()[(weekday + firstDay) % 7];
+      localeWeekDay (weekday) {
+        //firstDay = parseInt(firstDay);
+     //   const localMoment = new XDate().locales(locale);
+        return new XDate().setWeek(1,2018).addDays(weekday  % 7).toString("ddd");
       }
     }
   }
@@ -261,13 +264,19 @@
     margin-top: 20px;
   .weeks{
     display: flex;
-    border-top:1px solid #e0e0e0;
-    border-bottom:1px solid #e0e0e0;
-    border-left:1px solid #e0e0e0;
+      font-weight: bold;
+      text-align: center;
+      text-transform: capitalize;
+      padding: 8px 10px;
+      color: #FFFFFF;
+      background: #BDC2C7;
+      border: solid 1px #BDC2C7;
+      font-size: 13px;
+
   .week{
     flex:1;
     text-align: center;
-    border-right:1px solid #e0e0e0;
+
   }
   }
   .dates {
@@ -281,8 +290,8 @@
     flex:1;
     min-height: 112px;
     padding:4px;
-    border-right:1px solid #e0e0e0;
-    border-bottom:1px solid #e0e0e0;
+    border-right:1px solid rgba(84,136,199,0.15);
+    border-bottom:1px solid rgba(84,136,199,0.15);
   .day-number{
     text-align: right;
   }
@@ -325,15 +334,20 @@
   .event-item{
     cursor: pointer;
     font-size:12px;
-    background-color:#C7E6FD;
+    background-color:#2ecc71;
     margin-bottom:2px;
-    color: rgba(0,0,0,.87);
-    padding:0 0 0 4px;
-    height: 18px;
-    line-height: 18px;
+    color: white;
+    padding:0 10px;
+    height: 25px;
+    line-height: 25px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+text-align: center;
+      border-radius: 50px;
+      box-sizing: border-box;
+      border: 1px solid rgba(64,158,255,.2);
+      white-space: nowrap;
   &.is-start{
      margin-left: 4px;
    // border-top-left-radius:4px;

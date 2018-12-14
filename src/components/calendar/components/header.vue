@@ -17,7 +17,8 @@
 </template>
 <script type="text/babel">
 
-  import moment from 'moment';
+
+  import XDate from 'xdate';
 
   export default {
     props : {
@@ -36,16 +37,16 @@
     computed: {
       title () {
         if (!this.currentMonth) return;
-        return this.currentMonth.locale(this.locale).format('MMMM YYYY')
+        return this.currentMonth.toString("MMMM yyyy")
       }
     },
     methods : {
       goPrev () {
-        var newMonth = moment(this.currentMonth).subtract(1, 'months').startOf('month');
+        var newMonth = new XDate(this.currentMonth).addMonths(-1);
         this.$emit('change', newMonth);
       },
       goNext () {
-        var newMonth = moment(this.currentMonth).add(1, 'months').startOf('month');
+        var newMonth = new XDate(this.currentMonth).addMonths(1);
         this.$emit('change', newMonth);
       }
     }

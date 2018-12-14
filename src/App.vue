@@ -1,8 +1,10 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-    <calendar :events="fcEvents" first-day='1' locale="fr"
+      <button @click="jour">Jour</button>
+      <button @click="semaine">Semaine</button>
+      <button @click="mois">Mois</button>
+
+    <calendar :events="fcEvents" first-day='1' locale="fr" :nb-semaine="nbSemaine" :nb-jour="nbJour"
               @changeMonth="changeMonth"
               @eventClick="eventClick"
               @dayClick="dayClick"
@@ -11,20 +13,22 @@
         <p><i class="fa"></i> {{ p.event.title }}toto </p>
       </template>
   </calendar>
+
   </div>
 </template>
 
 <script>
 /* eslint no-console: 0 */
-import HelloWorld from './components/HelloWorld.vue'
+
 import calendar from './components/calendar/fullCalendar.vue'
 
 let demoEvents = [
   {
-    title    : 'Sunny 725-727',
+    title    : 'Sunny 725-725',
     start    : '2018-12-26',
     end      : '2018-12-27',
-    cssClass : 'family'
+    cssClass : 'family',
+      toto:"titi"
   },
   {
     title : 'Lunfel 726-727',
@@ -81,18 +85,19 @@ let demoEvents = [
 export default {
   name: 'app',
   components: {
-    calendar,
-    HelloWorld
+	  calendar
   },
   data () {
     return {
       name:'Sunny!',
-      fcEvents : demoEvents
+      fcEvents : demoEvents,
+        nbSemaine:6,
+        nbJour:7
     }
   },
 	methods : {
 		'changeMonth' (start, end, current) {
-			console.log('changeMonth', start.format(), end.format(), current.format())
+			//console.log('changeMonth', start.format(), end.format(), current.format())
 		},
 		'eventClick' (event, jsEvent, pos) {
 			console.log('eventClick', event, jsEvent, pos)
@@ -102,7 +107,20 @@ export default {
 		},
 		'moreClick' (day, events, jsEvent) {
 			console.log('moreCLick', day, events, jsEvent)
-		}
+		},
+        semaine(){
+			this.nbJour=7;
+			this.nbSemaine=1;
+        },
+        mois(){
+			this.nbJour=7;
+			this.nbSemaine=6;
+        },
+        jour(){
+			this.nbJour=1;
+			this.nbSemaine=1;
+
+        }
 	},
 }
 </script>

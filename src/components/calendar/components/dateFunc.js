@@ -1,23 +1,24 @@
-import moment from 'moment';
+
+import XDate from 'xdate';
 
 let dateFunc = {
   getMonthViewStartDate (date, firstDay) {
     firstDay = parseInt(firstDay);
-    let start = moment(date);
-    let startOfMonth = moment(start.startOf('month'));
+    let start = date? new XDate(date):new XDate();
+    let startOfMonth = new XDate (start.setDate(1));
 
-    start.subtract(startOfMonth.day(), 'days');
+    start.addDays(-startOfMonth.getDay());
 
-    if (startOfMonth.day() < firstDay) {
-      start.subtract(7, 'days');
+    if (startOfMonth.getDay() < firstDay) {
+      start.addDays(-7);
     }
 
-    start.add(firstDay, 'days');
+    start.addDays(firstDay);
 
     return start;
   },
   getMonthViewEndDate (date,firstDay) {
-    return this.getMonthViewStartDate(date,firstDay).add(6, 'weeks');
+    return this.getMonthViewStartDate(date,firstDay).addMonths(6);
   }
 };
 
